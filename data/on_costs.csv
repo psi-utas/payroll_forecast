@@ -1,0 +1,6 @@
+cost_code,on_cost,rate_pct,calculation_basis
+SUPER,Superannuation,17.000,BASE_SALARY
+PAYROLL_TAX,Payroll Tax,7.137,BASE_PLUS_SUPER
+LEAVE_LEVY,Central Leave Levy,4.000,BASE_SALARY
+WORKERS_COMP,Workers Compensation,0.300,BASE_SALARY
+CASUAL_SUPER,Superannuation - Casual,12.000,BASE_SALARY
