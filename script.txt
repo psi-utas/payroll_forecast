@@ -1,9 +1,3 @@
 cd C:\Users\smaruf\Downloads\payroll
-
 python -m pip install -r requirements.txt
-python -m venv venv
-
-Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
-.\venv\Scripts\Activate
-
-streamlit run app.py
+python -m streamlit run app.py
