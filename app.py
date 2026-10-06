@@ -1,10 +1,11 @@
 import streamlit as st
-from views import home, permanent, casual, severance, reference, settings, help_about
+from views import home, permanent, casual, severance
 
 st.set_page_config(page_title="Payroll Forecasting Tool", page_icon="💼", layout="wide",
                    initial_sidebar_state="collapsed")
 
-size = {"Default": "16px", "Large": "18px", "Extra Large": "21px"}[st.session_state.get("text_size", "Default")]
+# Text size was set on the Settings page, which is now removed, so it's fixed at the default.
+size = "16px"
 st.markdown(f"""<style>
 html, body, [class*='st-'] {{font-size:{size};}}
 [data-testid="stSidebar"], [data-testid="stSidebarCollapsedControl"],
@@ -16,13 +17,7 @@ P = {
     "permanent": st.Page(permanent.render, title="Permanent / Fixed-Term Forecast", icon="📈", url_path="permanent"),
     "casual": st.Page(casual.render, title="Casual Cost Calculator", icon="👥", url_path="casual"),
     "severance": st.Page(severance.render, title="Severance Calculator", icon="🛡️", url_path="severance"),
-    "increases": st.Page(reference.salary_increases, title="Salary Increase Rates", icon="💲", url_path="increases"),
-    "classifications": st.Page(reference.classifications, title="Classifications & Steps", icon="📘", url_path="classifications"),
-    "oncosts": st.Page(reference.on_costs, title="On-Cost Rates", icon="📉", url_path="oncosts"),
-    "settings": st.Page(settings.render, title="Settings", icon="⚙️", url_path="settings"),
-    "help": st.Page(help_about.render, title="Help & About", icon="❓", url_path="help"),
 }
-
 
 def home_page():
     home.render(P)
