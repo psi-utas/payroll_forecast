@@ -1,4 +1,6 @@
-├── app.py           # Main Streamlit application entry point & authentication gate
-├── core/            # Core calculation logic and UI helper modules
-├── data/            # Excel spreadsheets and reference data files
-└── views/           # Individual Streamlit page views (Home, calculators, etc.)
+## 📂 Project Architecture
+
+* **`app.py`** – The main entry point for the Streamlit application. Handles global page configuration, routing, and the Entra ID authentication gate.
+* **`core/`** – Contains business logic, financial calculations, and reusable UI components.
+* **`views/`** – Houses the individual page modules rendered by the application router.
+* **`data/`** – Stores Excel spreadsheets and data sources used across the forecasting tools.
