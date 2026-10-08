@@ -20,8 +20,9 @@ def to_pdf(title: str, sheets: dict[str, pd.DataFrame]) -> bytes:
     pdf.set_font("Helvetica", "B", 16)
     pdf.cell(0, 10, title, new_x="LMARGIN", new_y="NEXT")
     pdf.set_font("Helvetica", "I", 8)
-    pdf.cell(0, 5, "Estimate for budgeting and planning only - not a formal payroll record.",
-             new_x="LMARGIN", new_y="NEXT")
+    pdf.cell(0, 5, "Estimate for budgeting and planning only - not a formal payroll record.", new_x="RIGHT", new_y="TOP")
+    # Print the right-aligned text on the same line
+    pdf.cell(0, 5, "People Systems & Insights", align="R", new_x="RMARGIN", new_y="NEXT")
     for name, df in sheets.items():
         pdf.ln(4)
         pdf.set_font("Helvetica", "B", 11)
