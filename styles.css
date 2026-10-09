@@ -3,7 +3,8 @@
 :root { --brand: #e42313; --brand-dark: #c01e0f; --muted: rgba(128,128,128,0.95); --line: rgba(128,128,128,0.28); }
 
 /* ---------- base ---------- */
-#MainMenu, header, footer { visibility: hidden; }   /* comment out while developing to see the Deploy menu */
+ /* #MainMenu, header, footer { visibility: hidden; }   /* comment out while developing to see the Deploy menu */
+#MainMenu, [data-testid="stHeader"], [data-testid="stToolbar"], footer { visibility: hidden; }
 html, body, .stApp, [class*="css"], body * { font-family: 'Montserrat', sans-serif !important; }
 [data-testid="stIconMaterial"] { font-family: 'Material Symbols Rounded' !important; }
 .block-container { max-width: 1180px; padding-top: 1.5rem; padding-bottom: 1rem; }
