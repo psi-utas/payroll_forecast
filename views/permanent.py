@@ -5,6 +5,8 @@ from core import data, calculations as calc, exports
 from core.ui import clear_all_button
 
 FMT = "DD/MM/YYYY"
+MIN_DATE = date(2026, 7, 1)    # earliest selectable date
+MAX_DATE = date(2029, 6, 30)   # latest selectable date
 
 
 def render():
@@ -14,8 +16,10 @@ def render():
 
     st.subheader("1. Employment Details")
     c1, c2, c3 = st.columns(3)
-    start = c1.date_input("Start Date for Costing *", date(2026, 7, 1), format=FMT, key="perm_start")
-    end = c2.date_input("End Date for Costing *", date(2027, 6, 30), format=FMT, key="perm_end")
+    start = c1.date_input("Start Date for Costing *", MIN_DATE, format=FMT,
+                          min_value=MIN_DATE, max_value=MAX_DATE, key="perm_start")
+    end = c2.date_input("End Date for Costing *", date(2027, 6, 30), format=FMT,
+                        min_value=MIN_DATE, max_value=MAX_DATE, key="perm_end")
     frac = c3.number_input("Fraction of Appointment (%) *", 0.0, 100.0, 100.0, 5.0, key="perm_frac")
     c4, c5 = st.columns(2)
     cls = c4.selectbox("Classification / Level *", sorted(sal.classification.unique()), key="perm_cls")
@@ -39,6 +43,7 @@ def render():
             summary=pd.DataFrame([dict(Start=start.strftime("%d/%m/%Y"), End=end.strftime("%d/%m/%Y"),
                                        Classification=cls, Step=step, Fraction=frac,
                                        Increments=inc_on, NonSuper_Allowance=non_a)]).astype(str))
+
     r = st.session_state.get("perm_result")
     if not r:
         return
@@ -47,22 +52,19 @@ def render():
     st.subheader("Forecast Result")
     st.dataframe(r["summary"], hide_index=True, width="stretch")
 
-# Create total row
+    # Total row (a PA rate can't be summed, so it stays blank)
     tot = df.drop(columns="Year").sum()
-    total_row = { "Year": "Total", **tot.round(2).to_dict(), "PA Rate": pd.NA  # display blank in Total row
-             }
-
+    total_row = {"Year": "Total", **tot.round(2).to_dict(), "PA Rate": pd.NA}
     show = pd.concat([df, pd.DataFrame([total_row])], ignore_index=True)
     show["Year"] = show["Year"].astype(str)
 
-    st.dataframe(show, hide_index=True, width="stretch"
-    )
+    money = {c: "{:,.2f}" for c in show.columns if c != "Year"}
+    st.dataframe(show.style.format(money, na_rep=""), hide_index=True, width="stretch")
 
-    st.warning( "Future salary increases marked FORECAST are planning estimates and may change.")
+    st.warning("Future salary increases marked FORECAST are planning estimates and may change.")
 
-    sheets = { "Inputs": r["summary"],"Breakdown": show
-    }
-
+    sheets = {"Inputs": r["summary"], "Breakdown": show}
     b1, b2 = st.columns(2)
     b1.download_button("Export Excel", exports.to_excel(sheets), "Permanent_Forecast.xlsx")
-    b2.download_button( "Export PDF", exports.to_pdf( "Permanent / Fixed-Term Forecast", sheets ), "Permanent_Forecast.pdf")
+    b2.download_button("Export PDF", exports.to_pdf("Permanent / Fixed-Term Forecast", sheets),
+                       "Permanent_Forecast.pdf")
