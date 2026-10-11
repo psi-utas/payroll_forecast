@@ -1,0 +1,78 @@
+name: Deploy code base
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: utas-gitea-act-runner-ubuntu
+    steps:
+      - uses: actions/checkout@v4
+
+      # Runs before the service is stopped so a missing secret fails the
+      # deploy without taking the app down
+      - name: Populate Streamlit secrets
+        env:
+          PAYROLL_COOKIE_SECRET: ${{ secrets.PAYROLL_COOKIE_SECRET }}
+          PAYROLL_ENTRA_CLIENT_ID: ${{ secrets.PAYROLL_ENTRA_CLIENT_ID }}
+          PAYROLL_ENTRA_CLIENT_SECRET: ${{ secrets.PAYROLL_ENTRA_CLIENT_SECRET }}
+          PAYROLL_ENTRA_TENANT_ID: ${{ secrets.PAYROLL_ENTRA_TENANT_ID }}
+        run: |
+          vars='PAYROLL_COOKIE_SECRET PAYROLL_ENTRA_CLIENT_ID PAYROLL_ENTRA_CLIENT_SECRET PAYROLL_ENTRA_TENANT_ID'
+          for v in $vars; do
+            [ -n "${!v}" ] || { echo "::error::Secret $v is not set"; exit 1; }
+          done
+          # Plain bash replacement (the runner has no envsubst). Quoting the
+          # replacement and disabling patsub_replacement keeps & in secrets literal.
+          shopt -u patsub_replacement 2>/dev/null || true
+          content="$(< .streamlit/secrets.toml)"
+          for v in $vars; do
+            content="${content//"\${$v}"/"${!v}"}"
+          done
+          printf '%s\n' "$content" > .streamlit/secrets.toml
+          chmod 600 .streamlit/secrets.toml
+
+      - name: Stop service
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ vars.SSH_HOST }}
+          username: ${{ vars.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ vars.SSH_PORT }}
+          script: systemctl --user stop payroll-forecast
+
+      - name: Deploy on server
+        uses: easingthemes/ssh-deploy@main
+        with:
+          ARGS: "--delete"
+          # The venv lives in the target but isn't committed; excluded paths
+          # are also protected from --delete
+          EXCLUDE: "/venv/"
+          REMOTE_HOST: ${{ vars.SSH_HOST }}
+          REMOTE_USER: ${{ vars.SSH_USER }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_KEY }}
+          SOURCE: "."
+          TARGET: "/srv/sa-gpgsim/payroll_forecast/"
+
+      - name: Install Python dependencies
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ vars.SSH_HOST }}
+          username: ${{ vars.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ vars.SSH_PORT }}
+          script: |
+            set -e
+            cd /srv/sa-gpgsim/payroll_forecast
+            [ -x venv/bin/python ] || python3.12 -m venv venv
+            venv/bin/pip install -r requirements.txt
+
+      - name: Start service
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ vars.SSH_HOST }}
+          username: ${{ vars.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ vars.SSH_PORT }}
+          script: systemctl --user start payroll-forecast
