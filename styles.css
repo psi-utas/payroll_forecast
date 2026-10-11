@@ -82,3 +82,16 @@ div[data-testid="stDownloadButton"] button p { color: #fff; }
 /* ---------- footer ---------- */
 .footer { text-align: center; font-size: 0.75rem; color: var(--muted); padding: 0.6rem 0 0.4rem 0; }
 hr { margin: 1.6rem 0 0.4rem 0; border: none; height: 1px; background-color: var(--line); }
+
+/* ---------- login page ---------- */
+.login-card { border: 1px solid var(--line); border-radius: 16px; padding: 40px 36px 28px 36px;
+              margin-top: 8vh; background-color: rgba(255,255,255,0.05);
+              box-shadow: 0 4px 24px rgba(0,0,0,0.08); text-align: center; }
+.login-logo svg, .login-logo img { height: 52px; width: auto; margin-bottom: 18px; }
+.login-title { font-size: 22px; font-weight: 600; margin: 0 0 4px 0; }
+.login-subtitle, .login-helper { font-size: 13px; color: var(--muted); margin: 0 0 18px 0; }
+.login-divider { margin: 16px 0 18px 0; }
+.login-footer { margin-top: 18px; font-size: 11px; color: var(--muted); text-align: center; }
+
+/* signed-in user, under the footer */
+.account-user { font-size: 0.8rem; color: var(--muted); margin: 0; }
