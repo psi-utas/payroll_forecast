@@ -58,7 +58,7 @@ def render():
     show = pd.concat([df, pd.DataFrame([total_row])], ignore_index=True)
     show["Step"] = show["Step"].astype("Int64")
 
-    money = {c: "{:,.2f}" for c in show.columns if c not in ("Eff Dt", "Step")}
+    money = {c: "{:,.2f}" for c in show.select_dtypes("number").columns if c != "Step"}
     money["PA Rate"] = "${:,.2f}"
     st.dataframe(show.style.format(money, na_rep=""), hide_index=True, width="stretch")
     
