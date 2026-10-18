@@ -94,7 +94,7 @@ def permanent_forecast(start: date, end: date, fraction_pct: float, salaries: pd
     for g in segs:
         s, na = g["salary"], g["allowance"]
         sup = oc["SUPER"] * s
-        out.append({"From": g["first"].strftime("%d/%m/%Y"), "To": g["last"].strftime("%d/%m/%Y"),
+        out.append({"Eff Dt": g["first"].strftime("%d/%m/%Y"),
                     "Step": g["step"], "Fortnights": g["fortnights"],
                     "PA Rate": s / g["fortnights"] * FORTNIGHTS_PER_YEAR,  # salary annualised
                     "Salary": s, "Allowance": na, "Superannuation": sup,
@@ -102,6 +102,6 @@ def permanent_forecast(start: date, end: date, fraction_pct: float, salaries: pd
                     "Workers Compensation": oc["WORKERS_COMP"] * (s + na),
                     "Central Leave Levy": oc["LEAVE_LEVY"] * s})
     df = pd.DataFrame(out)
-    cost_cols = [c for c in df.columns if c not in ("From", "To", "Step", "Fortnights", "PA Rate")]
+    cost_cols = [c for c in df.columns if c not in ("Eff Dt", "Step", "Fortnights", "PA Rate")]
     df["Total Cost"] = df[cost_cols].sum(axis=1)
     return df.round(2)
