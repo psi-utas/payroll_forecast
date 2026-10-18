@@ -59,7 +59,7 @@ def render():
     show["Step"] = show["Step"].astype("Int64")
 
     money = {c: "{:,.2f}" for c in show.select_dtypes("number").columns if c != "Step"}
-    money["PA Rate"] = "${:,.2f}"
+    money["PA Rate"] = "${:,.0f}"
     st.dataframe(show.style.format(money, na_rep=""), hide_index=True, width="stretch")
     
     st.warning("Future salary increases marked FORECAST are planning estimates and may change.")
