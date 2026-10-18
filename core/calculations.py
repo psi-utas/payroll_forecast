@@ -97,7 +97,7 @@ def permanent_forecast(start: date, end: date, fraction_pct: float, salaries: pd
                     "PA Rate": s / g["fortnights"] * FORTNIGHTS_PER_YEAR,  # salary annualised
                     "Salary": s, "Allowance": na, "Superannuation": sup,
                     "Payroll Tax": oc["PAYROLL_TAX"] * (s + sup + na),
-                    "Workers Compensation": oc["WORKERS_COMP"] * (s + na),
+                    "Workers Comp": oc["WORKERS_COMP"] * (s + na),
                     "Central Leave Levy": oc["LEAVE_LEVY"] * s})
     df = pd.DataFrame(out)
     cost_cols = [c for c in df.columns if c not in ("Eff Dt", "Step", "Fortnights", "PA Rate")]
