@@ -51,15 +51,18 @@ def permanent_forecast(start: date, end: date, fraction_pct: float, salaries: pd
                        classification: str, step: int, increases: pd.DataFrame, oc: dict,
                        include_increments: bool = False,
                        non_super_allowance: float = 0.0) -> pd.DataFrame:
-    """Fortnight-based costing, aggregated by calendar year.
+    """Fortnight-based costing, one row per period of constant step.
 
-    Pay per fortnight = annual amount / 26.0893. The number of fortnights in a period is
-    (days in the period, start and end both included) / 14, so part fortnights count fractionally.
+    Pay per fortnight = annual amount / 26.0893. Fortnights in a period = days (start and end
+    both included) / 14, so part fortnights count fractionally.
 
+    ROWS:
+      * increments ticked: a new row starts on every 1 March where the step actually moves up
+        (no new row once the top step is reached)
+      * increments not ticked: a new row starts each 1 January
     ASSUMPTIONS (confirm with the tool owners):
       * salary = 2025 table value x compounded mid-year increases effective on the day
-      * increments: if ticked, the step moves up by 1 on every 1 March after the start date,
-        capped at the classification's top step (the selected step applies on the start date)
+        (so a 1 July increase inside a row is blended into that row's PA Rate)
       * the allowance is a non-superannuable annual amount, paid per fortnight (not scaled by FTE)
       * super 17% on salary only; leave levy on salary;
         workers comp on salary + allowance; payroll tax on salary + super + allowance
@@ -68,31 +71,37 @@ def permanent_forecast(start: date, end: date, fraction_pct: float, salaries: pd
         raise ValueError("End date cannot be earlier than start date")
     tbl = salaries[salaries.classification == classification].set_index("step")["annual_salary"]
     max_step = int(tbl.index.max())
-    rows: dict[int, dict] = {}
-    d, n_inc = start, 0
+    fn = 1 / DAYS_PER_FORTNIGHT  # one day = 1/14 of a fortnight
+
+    segs: list[dict] = []
+    seg, n_inc, d = None, 0, start
     while d <= end:
         if include_increments and d > start and d.month == 3 and d.day == 1:
             n_inc += 1  # annual increment on 1 March
         cur_step = min(step + n_inc, max_step)  # top step: no further move
-        fn = 1 / DAYS_PER_FORTNIGHT  # one day = 1/14 of a fortnight
+        new_year = (not include_increments) and d.month == 1 and d.day == 1
+        if seg is None or cur_step != seg["step"] or new_year:
+            seg = dict(first=d, last=d, step=cur_step, fortnights=0.0, salary=0.0, allowance=0.0)
+            segs.append(seg)
         fortnight_pay = tbl[cur_step] * uplift_factor(d, increases) * fraction_pct / 100 / FORTNIGHTS_PER_YEAR
-        r = rows.setdefault(d.year, dict(fortnights=0.0, salary=0.0, non_super_allowance=0.0))
-        r["fortnights"] += fn
-        r["salary"] += fortnight_pay * fn
-        r["non_super_allowance"] += non_super_allowance / FORTNIGHTS_PER_YEAR * fn
+        seg["last"] = d
+        seg["fortnights"] += fn
+        seg["salary"] += fortnight_pay * fn
+        seg["allowance"] += non_super_allowance / FORTNIGHTS_PER_YEAR * fn
         d += timedelta(days=1)
+
     out = []
-    for y, r in sorted(rows.items()):
-        s, na = r["salary"], r["non_super_allowance"]
+    for g in segs:
+        s, na = g["salary"], g["allowance"]
         sup = oc["SUPER"] * s
-        out.append({"Year": y, "Fortnights": r["fortnights"],
-                    "PA Rate": s / r["fortnights"] * FORTNIGHTS_PER_YEAR,  # salary annualised
-                    "Salary": s,
-                    "Allowance": na, "Superannuation": sup,
+        out.append({"From": g["first"].strftime("%d/%m/%Y"), "To": g["last"].strftime("%d/%m/%Y"),
+                    "Step": g["step"], "Fortnights": g["fortnights"],
+                    "PA Rate": s / g["fortnights"] * FORTNIGHTS_PER_YEAR,  # salary annualised
+                    "Salary": s, "Allowance": na, "Superannuation": sup,
                     "Payroll Tax": oc["PAYROLL_TAX"] * (s + sup + na),
                     "Workers Compensation": oc["WORKERS_COMP"] * (s + na),
                     "Central Leave Levy": oc["LEAVE_LEVY"] * s})
     df = pd.DataFrame(out)
-    cost_cols = [c for c in df.columns if c not in ("Year", "Fortnights", "PA Rate")]
+    cost_cols = [c for c in df.columns if c not in ("From", "To", "Step", "Fortnights", "PA Rate")]
     df["Total Cost"] = df[cost_cols].sum(axis=1)
     return df.round(2)
