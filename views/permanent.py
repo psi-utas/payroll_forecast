@@ -52,16 +52,17 @@ def render():
     st.subheader("Forecast Result")
     st.dataframe(r["summary"], hide_index=True, width="stretch")
 
-    # Total row (a PA rate can't be summed, so it stays blank)
-    tot = df.drop(columns="Year").sum()
-    total_row = {"Year": "Total", **tot.round(2).to_dict(), "PA Rate": pd.NA}
+       # Total row (a PA rate can't be summed, so it stays blank)
+    tot = df.drop(columns=["Eff Dt", "Step"]).sum()
+    total_row = {"Eff Dt": "Total", "Step": pd.NA, **tot.round(2).to_dict(), "PA Rate": float("nan")}
     show = pd.concat([df, pd.DataFrame([total_row])], ignore_index=True)
-    show["Year"] = show["Year"].astype(str)
+    show["Step"] = show["Step"].astype("Int64")
 
-    money = {c: "{:,.2f}" for c in show.columns if c != "Year"}
+    money = {c: "{:,.2f}" for c in show.select_dtypes("number").columns if c != "Step"}
+    money["PA Rate"] = "${:,.0f}"
     st.dataframe(show.style.format(money, na_rep=""), hide_index=True, width="stretch")
-
-    st.warning("Future salary increases marked FORECAST are planning estimates and may change.")
+    
+    st.warning("Estimate for budgeting and planning only - not a formal payroll record.")
 
     sheets = {"Inputs": r["summary"], "Breakdown": show}
     b1, b2 = st.columns(2)
