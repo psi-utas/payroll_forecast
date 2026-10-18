@@ -52,15 +52,15 @@ def render():
     st.subheader("Forecast Result")
     st.dataframe(r["summary"], hide_index=True, width="stretch")
 
-    # Total row (a PA rate can't be summed, so it stays blank)
-    tot = df.drop(columns="Year").sum()
-    total_row = {"Year": "Total", **tot.round(2).to_dict(), "PA Rate": pd.NA}
+       # Total row (a PA rate can't be summed, so it stays blank)
+    tot = df.drop(columns=["From", "To", "Step"]).sum()
+    total_row = {"From": "Total", "To": "", "Step": pd.NA, **tot.round(2).to_dict(), "PA Rate": pd.NA}
     show = pd.concat([df, pd.DataFrame([total_row])], ignore_index=True)
-    show["Year"] = show["Year"].astype(str)
+    show["Step"] = show["Step"].astype("Int64")
 
-    money = {c: "{:,.2f}" for c in show.columns if c != "Year"}
+    money = {c: "{:,.2f}" for c in show.columns if c not in ("From", "To", "Step")}
     st.dataframe(show.style.format(money, na_rep=""), hide_index=True, width="stretch")
-
+    
     st.warning("Future salary increases marked FORECAST are planning estimates and may change.")
 
     sheets = {"Inputs": r["summary"], "Breakdown": show}
