@@ -79,11 +79,12 @@ def permanent_forecast(start: date, end: date, fraction_pct: float, salaries: pd
         if include_increments and d > start and d.month == 3 and d.day == 1:
             n_inc += 1  # annual increment on 1 March
         cur_step = min(step + n_inc, max_step)  # top step: no further move
-        new_year = (not include_increments) and d.month == 1 and d.day == 1
-        if seg is None or cur_step != seg["step"] or new_year:
-            seg = dict(first=d, last=d, step=cur_step, fortnights=0.0, salary=0.0, allowance=0.0)
+        cur_uplift = uplift_factor(d, increases)  # changes on each 1 July salary increase
+        if seg is None or cur_step != seg["step"] or cur_uplift != seg["uplift"]:
+            seg = dict(first=d, last=d, step=cur_step, uplift=cur_uplift,
+                       fortnights=0.0, salary=0.0, allowance=0.0)
             segs.append(seg)
-        fortnight_pay = tbl[cur_step] * uplift_factor(d, increases) * fraction_pct / 100 / FORTNIGHTS_PER_YEAR
+        fortnight_pay = tbl[cur_step] * cur_uplift * fraction_pct / 100 / FORTNIGHTS_PER_YEAR
         seg["last"] = d
         seg["fortnights"] += fn
         seg["salary"] += fortnight_pay * fn
