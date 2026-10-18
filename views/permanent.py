@@ -53,12 +53,12 @@ def render():
     st.dataframe(r["summary"], hide_index=True, width="stretch")
 
        # Total row (a PA rate can't be summed, so it stays blank)
-    tot = df.drop(columns=["From", "To", "Step"]).sum()
+    tot = df.drop(columns=["Eff Dt", "Step"]).sum()
     total_row = {"From": "Total", "To": "", "Step": pd.NA, **tot.round(2).to_dict(), "PA Rate": pd.NA}
     show = pd.concat([df, pd.DataFrame([total_row])], ignore_index=True)
     show["Step"] = show["Step"].astype("Int64")
 
-    money = {c: "{:,.2f}" for c in show.columns if c not in ("From", "To", "Step")}
+    money = {c: "{:,.2f}" for c in show.columns if c not in ("Eff Dt", "Step")}
     st.dataframe(show.style.format(money, na_rep=""), hide_index=True, width="stretch")
     
     st.warning("Future salary increases marked FORECAST are planning estimates and may change.")
