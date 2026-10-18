@@ -37,5 +37,4 @@ def render(P):
 </div>""", unsafe_allow_html=True)
             st.page_link(P[key], label="Open Calculator →", width="stretch")
 
-    st.markdown('<div class="note">Rates marked <b>FORECAST</b> are planning assumptions '
-                'and may change.</div>', unsafe_allow_html=True)
+    st.markdown('<div class="note">Estimate for budgeting and planning only - not a formal payroll record.</div>', unsafe_allow_html=True)
