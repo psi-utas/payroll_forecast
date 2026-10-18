@@ -99,7 +99,7 @@ def permanent_forecast(start: date, end: date, fraction_pct: float, salaries: pd
                     "Payroll Tax": oc["PAYROLL_TAX"] * (s + sup + na),
                     "Workers Compensation": oc["WORKERS_COMP"] * (s + na),
                     "Central Leave Levy": oc["LEAVE_LEVY"] * s})
-    df = pd.DataFrame(out).round(2)
+    df = pd.DataFrame(out)
     cost_cols = [c for c in df.columns if c not in ("Eff Dt", "Step", "Fortnights", "PA Rate")]
     df["Total Cost"] = df[cost_cols].sum(axis=1)
     return df.round(2)
