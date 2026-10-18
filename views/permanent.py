@@ -54,7 +54,7 @@ def render():
 
        # Total row (a PA rate can't be summed, so it stays blank)
     tot = df.drop(columns=["Eff Dt", "Step"]).sum()
-    total_row = {"From": "Total", "To": "", "Step": pd.NA, **tot.round(2).to_dict(), "PA Rate": pd.NA}
+    total_row = {"Eff Dt": "Total", "Step": pd.NA, **tot.round(2).to_dict(), "PA Rate": float("nan")}
     show = pd.concat([df, pd.DataFrame([total_row])], ignore_index=True)
     show["Step"] = show["Step"].astype("Int64")
 
