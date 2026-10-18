@@ -1,8 +1,7 @@
 """Pure calculation functions (no Streamlit) so they can be unit tested."""
 from datetime import date, timedelta
-import pandas as pd 
+import pandas as pd
 from . import data
-
 
 FORTNIGHTS_PER_YEAR = 26.0893  # 365.25 / 14
 DAYS_PER_FORTNIGHT = 14
@@ -59,7 +58,6 @@ def permanent_forecast(start: date, end: date, fraction_pct: float, salaries: pd
     ROWS:
       * increments ticked: a new row starts on every 1 March where the step actually moves up
         (no new row once the top step is reached)
-      * increments not ticked: a new row starts each 1 January
     ASSUMPTIONS (confirm with the tool owners):
       * salary = 2025 table value x compounded mid-year increases effective on the day
         (so a 1 July increase inside a row is blended into that row's PA Rate)
@@ -81,11 +79,10 @@ def permanent_forecast(start: date, end: date, fraction_pct: float, salaries: pd
         cur_step = min(step + n_inc, max_step)  # top step: no further move
         cur_uplift = uplift_factor(d, increases)  # changes on each 1 July salary increase
         if seg is None or cur_step != seg["step"] or cur_uplift != seg["uplift"]:
-            seg = dict(first=d, last=d, step=cur_step, uplift=cur_uplift,
+            seg = dict(first=d, step=cur_step, uplift=cur_uplift,
                        fortnights=0.0, salary=0.0, allowance=0.0)
             segs.append(seg)
         fortnight_pay = tbl[cur_step] * cur_uplift * fraction_pct / 100 / FORTNIGHTS_PER_YEAR
-        seg["last"] = d
         seg["fortnights"] += fn
         seg["salary"] += fortnight_pay * fn
         seg["allowance"] += non_super_allowance / FORTNIGHTS_PER_YEAR * fn
@@ -102,7 +99,7 @@ def permanent_forecast(start: date, end: date, fraction_pct: float, salaries: pd
                     "Payroll Tax": oc["PAYROLL_TAX"] * (s + sup + na),
                     "Workers Compensation": oc["WORKERS_COMP"] * (s + na),
                     "Central Leave Levy": oc["LEAVE_LEVY"] * s})
-    df = pd.DataFrame(out)
+    df = pd.DataFrame(out).round(2)
     cost_cols = [c for c in df.columns if c not in ("Eff Dt", "Step", "Fortnights", "PA Rate")]
     df["Total Cost"] = df[cost_cols].sum(axis=1)
     return df.round(2)
