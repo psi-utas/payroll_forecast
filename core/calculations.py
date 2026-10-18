@@ -94,7 +94,7 @@ def permanent_forecast(start: date, end: date, fraction_pct: float, salaries: pd
     for g in segs:
         s, na = g["salary"], g["allowance"]
         sup = oc["SUPER"] * s
-        out.append({"Effective Date": g["first"].strftime("%d/%m/%Y"),
+        out.append({"From": g["first"].strftime("%d/%m/%Y"), "To": g["last"].strftime("%d/%m/%Y"),
                     "Step": g["step"], "Fortnights": g["fortnights"],
                     "PA Rate": s / g["fortnights"] * FORTNIGHTS_PER_YEAR,  # salary annualised
                     "Salary": s, "Allowance": na, "Superannuation": sup,
