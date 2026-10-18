@@ -62,7 +62,7 @@ def render():
     money["PA Rate"] = "${:,.0f}"
     st.dataframe(show.style.format(money, na_rep=""), hide_index=True, width="stretch")
     
-    st.warning("Future salary increases marked FORECAST are planning estimates and may change.")
+    st.warning("Estimate for budgeting and planning only - not a formal payroll record.")
 
     sheets = {"Inputs": r["summary"], "Breakdown": show}
     b1, b2 = st.columns(2)
