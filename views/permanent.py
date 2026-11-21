@@ -239,13 +239,13 @@ def render():
     width="stretch",
   )
 
-  sheets = {
-  "Inputs": r["summary"],
-  "Forecast Detail": show,
-  "Annual Summary": yearly_show,
-}
+    sheets = {
+    "Inputs": r["summary"],
+    "Forecast Detail": show,
+    "Annual Summary": yearly_show,
+  }
 
-c1, c2 = st.columns(2)
+  c1, c2 = st.columns(2)
 
   c1.download_button(
     "Export Excel",
