@@ -132,7 +132,7 @@ def render():
                         Fraction=frac,
                         Increments=inc_on,
                         NonSuper Allowance=non_a,
-                        Superable Allowance=super_a,
+                        Superable Allowance=super_a
                     )
                 ]
             ).astype(str),
