@@ -206,6 +206,49 @@ def render():
         width="stretch",
     )
 
+    # ------------------------------------------------------------------
+    # Annual Summary
+    # ------------------------------------------------------------------
+
+    annual = df.copy()
+
+    annual["Year"] = pd.to_datetime(
+        annual["Eff Dt"],
+        format="%d/%m/%Y"
+    ).dt.year
+
+    yearly = (
+        annual.groupby("Year")
+        .sum(numeric_only=True)
+        .reset_index()
+    )
+
+    year_tot = yearly.drop(columns=["Year"]).sum()
+
+    yearly_total = {
+        "Year": "Total",
+        **year_tot.round(2).to_dict()
+    }
+
+    yearly_show = pd.concat(
+        [yearly, pd.DataFrame([yearly_total])],
+        ignore_index=True
+    )
+
+    st.subheader("Annual Summary")
+
+    yearly_money = {
+        c: "{:,.2f}"
+        for c in yearly_show.columns
+        if c != "Year"
+    }
+
+    st.dataframe(
+        yearly_show.style.format(yearly_money, na_rep=""),
+        hide_index=True,
+        width="stretch",
+    )
+
     sheets = {
         "Inputs": r["summary"],
         "Breakdown": show,
