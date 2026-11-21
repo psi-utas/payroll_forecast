@@ -126,8 +126,8 @@ def render():
                         Step=step,
                         Fraction=frac,
                         Increments=inc_on,
-                        NonSuper_Allowance=non_a,
-                        Superable_Allowance=super_a,
+                        NonSuper Allowance=non_a,
+                        Superable Allowance=super_a,
                     )
                 ]
             ).astype(str),
