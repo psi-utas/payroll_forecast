@@ -68,9 +68,14 @@ def render():
 
     st.subheader("2. Increment Options")
 
-    inc_on = st.checkbox(
-        "Include Increments? (moves up one step each 1 March, up to the top step)",
-        key="perm_inc",
+    inc_first_year = st.checkbox(
+    "Include increment in first year?",
+    value=True,
+    key="perm_inc_first_year",
+    )
+
+    st.caption(
+    "All subsequent annual increments will be applied automatically up to the top step."
     )
 
     st.subheader("3. Allowances")
