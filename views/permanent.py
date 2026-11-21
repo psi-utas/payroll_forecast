@@ -160,6 +160,9 @@ def render():
   df = r["df"]
 
   st.subheader("Forecast Result")
+  st.info(
+    "Forecast assumption: Salary increases from 1 July 2030 onwards are modelled at 3.0% p.a. for budgeting and planning purposes."
+  )
 
   st.dataframe(
     r["summary"],
