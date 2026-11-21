@@ -31,8 +31,14 @@ def render():
                          key="perm_inc")
 
     st.subheader("3. Allowance")
-    non_a = st.number_input("Non-superannuable allowance ($ p.a.)", 0.0, step=100.0, key="perm_non")
-    go = st.button("Calculate Forecast", type="primary", key="perm_go")
+
+    non_a = st.number_input(
+    "Non-superannuable allowance ($ p.a.)", 0.0, step=100.0, key="perm_non"
+    )
+
+    super_a = st.number_input(
+    "Superable allowance ($ p.a.)", 0.0, step=100.0, key="perm_super"
+    )
 
     if go:
         if end < start:
