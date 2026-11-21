@@ -20,9 +20,7 @@ def render():
     inc = data.load_increases()
     oc = data.load_on_costs()
 
-    # ------------------------------------------------------------------
     # Employment Details
-    # ------------------------------------------------------------------
 
     st.subheader("1. Employment Details")
 
@@ -87,9 +85,7 @@ def render():
         "All subsequent annual increments will be applied automatically up to the top step."
     )
 
-    # ------------------------------------------------------------------
     # Allowances
-    # ------------------------------------------------------------------
 
     st.subheader("3. Allowances")
 
@@ -111,9 +107,7 @@ def render():
         key="perm_super",
     )
 
-    # ------------------------------------------------------------------
     # Calculate
-    # ------------------------------------------------------------------
 
     go = st.button(
         "Calculate Forecast",
@@ -157,9 +151,7 @@ def render():
             ).astype(str),
         )
 
-    # ------------------------------------------------------------------
     # Results
-    # ------------------------------------------------------------------
 
     r = st.session_state.get("perm_result")
 
@@ -206,9 +198,24 @@ def render():
         width="stretch",
     )
 
-    # ------------------------------------------------------------------
+    c1, c2 = st.columns(2)
+
+    c1.download_button(
+        "Export Excel",
+        exports.to_excel(sheets),
+        "Permanent_Forecast.xlsx",
+    )
+
+    c2.download_button(
+        "Export PDF",
+        exports.to_pdf(
+            "Permanent / Fixed-Term Forecast",
+            sheets,
+        ),
+        "Permanent_Forecast.pdf",
+    )
+
     # Annual Summary
-    # ------------------------------------------------------------------
 
     annual = df.copy()
 
@@ -253,20 +260,3 @@ def render():
         "Inputs": r["summary"],
         "Breakdown": show,
     }
-
-    c1, c2 = st.columns(2)
-
-    c1.download_button(
-        "Export Excel",
-        exports.to_excel(sheets),
-        "Permanent_Forecast.xlsx",
-    )
-
-    c2.download_button(
-        "Export PDF",
-        exports.to_pdf(
-            "Permanent / Fixed-Term Forecast",
-            sheets,
-        ),
-        "Permanent_Forecast.pdf",
-    )
