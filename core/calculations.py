@@ -77,7 +77,7 @@ def permanent_forecast(
     step: int,
     increases: pd.DataFrame,
     oc: dict,
-    include_increments: bool = False,
+    include_first_year_increment: bool = True,
     non_super_allowance: float = 0.0,
     superable_allowance: float = 0.0,
 ) -> pd.DataFrame:
@@ -109,8 +109,17 @@ def permanent_forecast(
 
     while d <= end:
 
-        if include_increments and d > start and d.month == 3 and d.day == 1:
+        if d > start and d.month == 3 and d.day == 1:
+
+    # first increment opportunity
+    if n_inc == 0:
+
+        if include_first_year_increment:
             n_inc += 1
+
+    # all future increments always apply
+    else:
+        n_inc += 1
 
         cur_step = min(step + n_inc, max_step)
         cur_uplift = uplift_factor(d, increases)
