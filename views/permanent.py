@@ -225,7 +225,8 @@ def render():
     ).dt.year
 
     yearly = (
-        annual.groupby("Year")
+        annual.drop(columns=["Step", "Fortnights", "PA Rate"])
+        .groupby("Year")
         .sum(numeric_only=True)
         .reset_index()
     )
