@@ -68,67 +68,35 @@ def severance_cost(
     )
 
 
-def permanent_forecast(
-    start: date,
-    end: date,
-    fraction_pct: float,
-    salaries: pd.DataFrame,
-    classification: str,
-    step: int,
-    increases: pd.DataFrame,
-    oc: dict,
-    include_first_year_increment: bool = True,
-    non_super_allowance: float = 0.0,
-    superable_allowance: float = 0.0,
-) -> pd.DataFrame:
-    """
-    Fortnight-based costing, one row per period of constant step.
-
-    Assumptions:
-      * salary = table value × applicable salary increases
-      * non-super allowance is excluded from super
-      * superable allowance attracts super
-      * payroll tax applies to salary + allowances + super
-      * workers comp applies to salary + allowances
-      * leave levy applies to salary only
-    """
+def permanent_forecast(start: date, end: date, fraction_pct: float, salaries: pd.DataFrame,
+                       classification: str, step: int, increases: pd.DataFrame, oc: dict,
+                       include_first_year_increment: bool = True,
+                       non_super_allowance: float = 0.0,
+                       superable_allowance: float = 0.0) -> pd.DataFrame:
+    """Fortnight-based costing, one row per period of constant step."""
 
     if end < start:
         raise ValueError("End date cannot be earlier than start date")
 
-    tbl = (
-        salaries[salaries.classification == classification]
-        .set_index("step")["annual_salary"]
-    )
-
+    tbl = salaries[salaries.classification == classification].set_index("step")["annual_salary"]
     max_step = int(tbl.index.max())
     fn = 1 / DAYS_PER_FORTNIGHT
 
-    segs: list[dict] = []
+    segs = []
     seg, n_inc, d = None, 0, start
+    first_increment_processed = False
 
     while d <= end:
 
         if d > start and d.month == 3 and d.day == 1:
-
-    # first increment opportunity
-    if n_inc == 0:
-
-        if include_first_year_increment:
-            n_inc += 1
-
-    # all future increments always apply
-    else:
-        n_inc += 1
+            if first_increment_processed or include_first_year_increment:
+                n_inc += 1
+            first_increment_processed = True
 
         cur_step = min(step + n_inc, max_step)
         cur_uplift = uplift_factor(d, increases)
 
-        if (
-            seg is None
-            or cur_step != seg["step"]
-            or cur_uplift != seg["uplift"]
-        ):
+        if seg is None or cur_step != seg["step"] or cur_uplift != seg["uplift"]:
             seg = dict(
                 first=d,
                 step=cur_step,
@@ -136,28 +104,16 @@ def permanent_forecast(
                 fortnights=0.0,
                 salary=0.0,
                 allowance=0.0,
-                superable_allowance=0.0,
+                superable_allowance=0.0
             )
             segs.append(seg)
 
-        fortnight_pay = (
-            tbl[cur_step]
-            * cur_uplift
-            * fraction_pct
-            / 100
-            / FORTNIGHTS_PER_YEAR
-        )
+        fortnight_pay = tbl[cur_step] * cur_uplift * fraction_pct / 100 / FORTNIGHTS_PER_YEAR
 
         seg["fortnights"] += fn
         seg["salary"] += fortnight_pay * fn
-
-        seg["allowance"] += (
-            non_super_allowance / FORTNIGHTS_PER_YEAR * fn
-        )
-
-        seg["superable_allowance"] += (
-            superable_allowance / FORTNIGHTS_PER_YEAR * fn
-        )
+        seg["allowance"] += non_super_allowance / FORTNIGHTS_PER_YEAR * fn
+        seg["superable_allowance"] += superable_allowance / FORTNIGHTS_PER_YEAR * fn
 
         d += timedelta(days=1)
 
@@ -172,41 +128,33 @@ def permanent_forecast(
         superannuation = oc["SUPER"] * (salary + superable)
 
         payroll_tax = oc["PAYROLL_TAX"] * (
-            salary
-            + non_super
-            + superable
-            + superannuation
+            salary + non_super + superable + superannuation
         )
 
         workers_comp = oc["WORKERS_COMP"] * (
-            salary
-            + non_super
-            + superable
+            salary + non_super + superable
         )
 
         leave_levy = oc["LEAVE_LEVY"] * salary
 
-        out.append(
-            {
-                "Eff Dt": g["first"].strftime("%d/%m/%Y"),
-                "Step": g["step"],
-                "Fortnights": g["fortnights"],
-                "PA Rate": salary / g["fortnights"] * FORTNIGHTS_PER_YEAR,
-                "Salary": salary,
-                "Allowance": non_super,
-                "Superable Allowance": superable,
-                "Superannuation": superannuation,
-                "Payroll Tax": payroll_tax,
-                "Workers Comp": workers_comp,
-                "Central Leave Levy": leave_levy,
-            }
-        )
+        out.append({
+            "Eff Dt": g["first"].strftime("%d/%m/%Y"),
+            "Step": g["step"],
+            "Fortnights": g["fortnights"],
+            "PA Rate": salary / g["fortnights"] * FORTNIGHTS_PER_YEAR,
+            "Salary": salary,
+            "Allowance": non_super,
+            "Superable Allowance": superable,
+            "Superannuation": superannuation,
+            "Payroll Tax": payroll_tax,
+            "Workers Comp": workers_comp,
+            "Central Leave Levy": leave_levy
+        })
 
     df = pd.DataFrame(out)
 
     cost_cols = [
-        c
-        for c in df.columns
+        c for c in df.columns
         if c not in ("Eff Dt", "Step", "Fortnights", "PA Rate")
     ]
 
