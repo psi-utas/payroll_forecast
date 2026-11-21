@@ -11,6 +11,7 @@ MAX_DATE = date(2034, 6, 30)
 
 
 def render():
+
     st.markdown("### Permanent / Fixed-Term Forecast")
 
     clear_all_button("perm_")
@@ -18,6 +19,10 @@ def render():
     sal = data.load_salaries()
     inc = data.load_increases()
     oc = data.load_on_costs()
+
+    # ------------------------------------------------------------------
+    # Employment Details
+    # ------------------------------------------------------------------
 
     st.subheader("1. Employment Details")
 
@@ -43,10 +48,10 @@ def render():
 
     frac = c3.number_input(
         "Fraction of Appointment (%) *",
-        0.0,
-        100.0,
-        100.0,
-        5.0,
+        min_value=0.0,
+        max_value=100.0,
+        value=100.0,
+        step=5.0,
         key="perm_frac",
     )
 
@@ -66,17 +71,25 @@ def render():
         key=f"perm_step_{cls}",
     )
 
+    # ------------------------------------------------------------------
+    # Increment Options
+    # ------------------------------------------------------------------
+
     st.subheader("2. Increment Options")
 
     inc_first_year = st.checkbox(
-    "Include increment in first year?",
-    value=True,
-    key="perm_inc_first_year",
+        "Include increment in first year?",
+        value=True,
+        key="perm_inc_first_year",
     )
 
     st.caption(
-    "All subsequent annual increments will be applied automatically up to the top step."
+        "All subsequent annual increments will be applied automatically up to the top step."
     )
+
+    # ------------------------------------------------------------------
+    # Allowances
+    # ------------------------------------------------------------------
 
     st.subheader("3. Allowances")
 
@@ -84,17 +97,23 @@ def render():
 
     non_a = c6.number_input(
         "Non-superannuable allowance ($ p.a.)",
-        0.0,
+        min_value=0.0,
+        value=0.0,
         step=100.0,
         key="perm_non",
     )
 
     super_a = c7.number_input(
         "Superable allowance ($ p.a.)",
-        0.0,
+        min_value=0.0,
+        value=0.0,
         step=100.0,
         key="perm_super",
     )
+
+    # ------------------------------------------------------------------
+    # Calculate
+    # ------------------------------------------------------------------
 
     go = st.button(
         "Calculate Forecast",
@@ -118,25 +137,29 @@ def render():
                 step=step,
                 increases=inc,
                 oc=oc,
-                include_increments=inc_on,
+                include_first_year_increment=inc_first_year,
                 non_super_allowance=non_a,
                 superable_allowance=super_a,
             ),
             summary=pd.DataFrame(
                 [
-                    dict(
-                        Start=start.strftime("%d/%m/%Y"),
-                        End=end.strftime("%d/%m/%Y"),
-                        Classification=cls,
-                        Step=step,
-                        Fraction=frac,
-                        Increments=inc_on,
-                        NonSuper_Allowance=non_a,
-                        Superable_Allowance=super_a
-                    )
+                    {
+                        "Start": start.strftime("%d/%m/%Y"),
+                        "End": end.strftime("%d/%m/%Y"),
+                        "Classification": cls,
+                        "Step": step,
+                        "Fraction (%)": frac,
+                        "First Year Increment": inc_first_year,
+                        "Non-Super Allowance": non_a,
+                        "Superable Allowance": super_a,
+                    }
                 ]
             ).astype(str),
         )
+
+    # ------------------------------------------------------------------
+    # Results
+    # ------------------------------------------------------------------
 
     r = st.session_state.get("perm_result")
 
@@ -188,15 +211,15 @@ def render():
         "Breakdown": show,
     }
 
-    b1, b2 = st.columns(2)
+    c1, c2 = st.columns(2)
 
-    b1.download_button(
+    c1.download_button(
         "Export Excel",
         exports.to_excel(sheets),
         "Permanent_Forecast.xlsx",
     )
 
-    b2.download_button(
+    c2.download_button(
         "Export PDF",
         exports.to_pdf(
             "Permanent / Fixed-Term Forecast",
