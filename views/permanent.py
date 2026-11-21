@@ -6,7 +6,7 @@ from core.ui import clear_all_button
 
 FMT = "DD/MM/YYYY"
 MIN_DATE = date(2026, 7, 1)    # earliest selectable date
-MAX_DATE = date(2029, 6, 30)   # latest selectable date
+MAX_DATE = date(2029, 6, 34)   # latest selectable date
 
 
 def render():
