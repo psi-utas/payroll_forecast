@@ -56,9 +56,9 @@ if pg is not HOME:  # slim top bar on every other page
 pg.run()
 render_footer()
 
-# The sidebar is hidden, so the signed-in user and logout sit under the footer
-left, right = st.columns([5, 1], vertical_alignment="center")
-left.markdown(f"<p class='account-user'>Signed in as <strong>{html.escape(st.user.name or '')}</strong></p>",
-              unsafe_allow_html=True)
-if right.button("Log out", width="stretch"):
-    st.logout()
+# # The sidebar is hidden, so the signed-in user and logout sit under the footer
+# left, right = st.columns([5, 1], vertical_alignment="center")
+# left.markdown(f"<p class='account-user'>Signed in as <strong>{html.escape(st.user.name or '')}</strong></p>",
+#               unsafe_allow_html=True)
+# if right.button("Log out", width="stretch"):
+#     st.logout()
