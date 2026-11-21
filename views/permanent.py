@@ -197,7 +197,7 @@ def render():
     width="stretch",
   )
 
-  # Annual Summary
+   # Annual Summary
 
   annual = df.copy()
 
@@ -215,13 +215,13 @@ def render():
 
   year_tot = yearly.drop(columns=["Year"]).sum()
 
-  yearly_total = {
+  yearly_total = pd.DataFrame([{
     "Year": "Total",
     **year_tot.round(2).to_dict()
-  }
+  }])
 
   yearly_show = pd.concat(
-    [yearly, pd.DataFrame([yearly_total])],
+    [yearly, yearly_total],
     ignore_index=True
   )
 
@@ -239,7 +239,7 @@ def render():
     width="stretch",
   )
 
-    sheets = {
+  sheets = {
     "Inputs": r["summary"],
     "Forecast Detail": show,
     "Annual Summary": yearly_show,
