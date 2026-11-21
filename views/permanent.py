@@ -1,75 +1,201 @@
 from datetime import date
 import pandas as pd
 import streamlit as st
+
 from core import data, calculations as calc, exports
 from core.ui import clear_all_button
 
 FMT = "DD/MM/YYYY"
-MIN_DATE = date(2026, 7, 1)    # earliest selectable date
-MAX_DATE = date(2034, 6, 30)   # latest selectable date
+MIN_DATE = date(2026, 7, 1)
+MAX_DATE = date(2034, 6, 30)
 
 
 def render():
     st.markdown("### Permanent / Fixed-Term Forecast")
+
     clear_all_button("perm_")
-    sal, inc, oc = data.load_salaries(), data.load_increases(), data.load_on_costs()
+
+    sal = data.load_salaries()
+    inc = data.load_increases()
+    oc = data.load_on_costs()
 
     st.subheader("1. Employment Details")
+
     c1, c2, c3 = st.columns(3)
-    start = c1.date_input("Start Date for Costing *", MIN_DATE, format=FMT,
-                          min_value=MIN_DATE, max_value=MAX_DATE, key="perm_start")
-    end = c2.date_input("End Date for Costing *", date(2027, 6, 30), format=FMT,
-                        min_value=MIN_DATE, max_value=MAX_DATE, key="perm_end")
-    frac = c3.number_input("Fraction of Appointment (%) *", 0.0, 100.0, 100.0, 5.0, key="perm_frac")
-    c4, c5 = st.columns(2)
-    cls = c4.selectbox("Classification / Level *", sorted(sal.classification.unique()), key="perm_cls")
-    steps = sal[sal.classification == cls].step.tolist()  # steps follow the chosen classification
-    step = c5.selectbox("Step *", steps, key=f"perm_step_{cls}")
 
-    st.subheader("2. Increment Options")
-    inc_on = st.checkbox("Include Increments? (moves up one step each 1 March, up to the top step)",
-                         key="perm_inc")
-
-    st.subheader("3. Allowance")
-
-    non_a = st.number_input(
-    "Non-superannuable allowance ($ p.a.)", 0.0, step=100.0, key="perm_non"
+    start = c1.date_input(
+        "Start Date for Costing *",
+        MIN_DATE,
+        format=FMT,
+        min_value=MIN_DATE,
+        max_value=MAX_DATE,
+        key="perm_start",
     )
 
-    super_a = st.number_input(
-    "Superable allowance ($ p.a.)", 0.0, step=100.0, key="perm_super"
+    end = c2.date_input(
+        "End Date for Costing *",
+        date(2027, 6, 30),
+        format=FMT,
+        min_value=MIN_DATE,
+        max_value=MAX_DATE,
+        key="perm_end",
+    )
+
+    frac = c3.number_input(
+        "Fraction of Appointment (%) *",
+        0.0,
+        100.0,
+        100.0,
+        5.0,
+        key="perm_frac",
+    )
+
+    c4, c5 = st.columns(2)
+
+    cls = c4.selectbox(
+        "Classification / Level *",
+        sorted(sal.classification.unique()),
+        key="perm_cls",
+    )
+
+    steps = sal[sal.classification == cls].step.tolist()
+
+    step = c5.selectbox(
+        "Step *",
+        steps,
+        key=f"perm_step_{cls}",
+    )
+
+    st.subheader("2. Increment Options")
+
+    inc_on = st.checkbox(
+        "Include Increments? (moves up one step each 1 March, up to the top step)",
+        key="perm_inc",
+    )
+
+    st.subheader("3. Allowances")
+
+    c6, c7 = st.columns(2)
+
+    non_a = c6.number_input(
+        "Non-superannuable allowance ($ p.a.)",
+        0.0,
+        step=100.0,
+        key="perm_non",
+    )
+
+    super_a = c7.number_input(
+        "Superable allowance ($ p.a.)",
+        0.0,
+        step=100.0,
+        key="perm_super",
+    )
+
+    go = st.button(
+        "Calculate Forecast",
+        type="primary",
+        key="perm_go",
     )
 
     if go:
+
         if end < start:
             st.error("End date cannot be earlier than start date.")
             return
+
         st.session_state.perm_result = dict(
-            df=calc.permanent_forecast(start, end, frac, sal, cls, step, inc, oc, inc_on, non_a),
-            summary=pd.DataFrame([dict(Start=start.strftime("%d/%m/%Y"), End=end.strftime("%d/%m/%Y"),
-                                       Classification=cls, Step=step, Fraction=frac,
-                                       Increments=inc_on, NonSuper_Allowance=non_a)]).astype(str))
+            df=calc.permanent_forecast(
+                start=start,
+                end=end,
+                fraction_pct=frac,
+                salaries=sal,
+                classification=cls,
+                step=step,
+                increases=inc,
+                oc=oc,
+                include_increments=inc_on,
+                non_super_allowance=non_a,
+                superable_allowance=super_a,
+            ),
+            summary=pd.DataFrame(
+                [
+                    dict(
+                        Start=start.strftime("%d/%m/%Y"),
+                        End=end.strftime("%d/%m/%Y"),
+                        Classification=cls,
+                        Step=step,
+                        Fraction=frac,
+                        Increments=inc_on,
+                        NonSuper_Allowance=non_a,
+                        Superable_Allowance=super_a,
+                    )
+                ]
+            ).astype(str),
+        )
 
     r = st.session_state.get("perm_result")
+
     if not r:
         return
+
     df = r["df"]
 
     st.subheader("Forecast Result")
-    st.dataframe(r["summary"], hide_index=True, width="stretch")
 
-       # Total row (a PA rate can't be summed, so it stays blank)
+    st.dataframe(
+        r["summary"],
+        hide_index=True,
+        width="stretch",
+    )
+
     tot = df.drop(columns=["Eff Dt", "Step"]).sum()
-    total_row = {"Eff Dt": "Total", "Step": pd.NA, **tot.round(2).to_dict(), "PA Rate": float("nan")}
-    show = pd.concat([df, pd.DataFrame([total_row])], ignore_index=True)
+
+    total_row = {
+        "Eff Dt": "Total",
+        "Step": pd.NA,
+        **tot.round(2).to_dict(),
+        "PA Rate": float("nan"),
+    }
+
+    show = pd.concat(
+        [df, pd.DataFrame([total_row])],
+        ignore_index=True,
+    )
+
     show["Step"] = show["Step"].astype("Int64")
 
-    money = {c: "{:,.2f}" for c in show.select_dtypes("number").columns if c != "Step"}
-    money["PA Rate"] = "${:,.0f}"
-    st.dataframe(show.style.format(money, na_rep=""), hide_index=True, width="stretch")
+    money = {
+        c: "{:,.2f}"
+        for c in show.select_dtypes("number").columns
+        if c != "Step"
+    }
 
-    sheets = {"Inputs": r["summary"], "Breakdown": show}
+    money["PA Rate"] = "${:,.0f}"
+
+    st.dataframe(
+        show.style.format(money, na_rep=""),
+        hide_index=True,
+        width="stretch",
+    )
+
+    sheets = {
+        "Inputs": r["summary"],
+        "Breakdown": show,
+    }
+
     b1, b2 = st.columns(2)
-    b1.download_button("Export Excel", exports.to_excel(sheets), "Permanent_Forecast.xlsx")
-    b2.download_button("Export PDF", exports.to_pdf("Permanent / Fixed-Term Forecast", sheets),
-                       "Permanent_Forecast.pdf")
+
+    b1.download_button(
+        "Export Excel",
+        exports.to_excel(sheets),
+        "Permanent_Forecast.xlsx",
+    )
+
+    b2.download_button(
+        "Export PDF",
+        exports.to_pdf(
+            "Permanent / Fixed-Term Forecast",
+            sheets,
+        ),
+        "Permanent_Forecast.pdf",
+    )
